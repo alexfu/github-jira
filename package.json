@@ -1,0 +1,59 @@
+{
+  "name": "github-jira-pr",
+  "version": "0.0.0",
+  "author": "Alex Fu @alexfu",
+  "bin": {
+    "github-jira-pr": "./bin/run"
+  },
+  "bugs": "https://github.com/alexfu/mynewcli/issues",
+  "dependencies": {
+    "@oclif/command": "^1.5.6",
+    "@oclif/config": "^1.9.0",
+    "@oclif/plugin-help": "^2.1.4",
+    "@types/nodegit": "^0.22.4",
+    "axios": "^0.18.0",
+    "nodegit": "^0.23.0",
+    "tslib": "^1.9.3"
+  },
+  "devDependencies": {
+    "@oclif/test": "^1.2.2",
+    "@oclif/tslint": "^3.1.1",
+    "@types/chai": "^4.1.7",
+    "@types/mocha": "^5.2.5",
+    "@types/node": "^10.12.7",
+    "chai": "^4.2.0",
+    "mocha": "^5.2.0",
+    "nyc": "^13.1.0",
+    "ts-node": "^7.0.1",
+    "tslint": "^5.11.0",
+    "typescript": "^3.1.6"
+  },
+  "engines": {
+    "node": ">=8.0.0"
+  },
+  "files": [
+    "/bin",
+    "/lib"
+  ],
+  "homepage": "https://github.com/alexfu/mynewcli",
+  "keywords": [
+    "oclif"
+  ],
+  "license": "MIT",
+  "main": "lib/index.js",
+  "oclif": {
+    "bin": "github-jira-pr"
+  },
+  "repository": "alexfu/mynewcli",
+  "scripts": {
+    "posttest": "tslint -p test -t stylish",
+    "prepack": "rm -rf lib && tsc -b",
+    "test": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\""
+  },
+  "types": "lib/index.d.ts",
+  "oclif": {
+    "macos": {
+      "identifier": "com.alexfu.github-jira-pr"
+    }
+  }
+}
