@@ -1,15 +1,22 @@
-mynewcli
+github-jira-pr
 ========
+```
+Create GitHub PRs from JIRA tickets
 
+USAGE
+  $ github-jira-pr
 
+OPTIONS
+  -b, --base-branch=base-branch              (required) base branch for PR
+  -h, --help                                 show CLI help
+  -t, --ticket-id=ticket-id                  (required) jira ticket ID
+  --github-access-token=github-access-token  (required) github access token
+  --jira-access-token=jira-access-token      (required) jira access token
 
-[![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
-[![Version](https://img.shields.io/npm/v/mynewcli.svg)](https://npmjs.org/package/mynewcli)
-[![Downloads/week](https://img.shields.io/npm/dw/mynewcli.svg)](https://npmjs.org/package/mynewcli)
-[![License](https://img.shields.io/npm/l/mynewcli.svg)](https://github.com/alexfu/mynewcli/blob/master/package.json)
+  --jira-email=jira-email                    (required) email address associated
+                                             with jira
 
-<!-- toc -->
-# Usage
-<!-- usage -->
-# Commands
-<!-- commands -->
+  --jira-host=jira-host                      custom host for jira (i.e.
+                                             mycompany.atlassian.net)
+
+```
