@@ -21,6 +21,23 @@ OPTIONS
 
 ```
 
+# How does it work?
+
+`github-jira-pr` will pull the title of the JIRA ticket and assign it as the PR title. Additionally, each PR title will be prefixed with the ticket ID in square brackets (i.e. **[BUY-123] Fix app crashes**).
+
+Also, the PR description will include a link to the JIRA ticket.
+
+# Install
+
+**Standalone**
+
+Download latest binary here: https://github.com/alexfu/github-jira-pr/releases.
+
+**npm**
+```
+$ npm i github-jira-pr
+```
+
 # Integrate with Git
 Easily integrate with git by using this script:
 
