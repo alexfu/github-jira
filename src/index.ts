@@ -2,6 +2,7 @@ import {Command, flags} from '@oclif/command'
 import {CLIError} from '@oclif/errors'
 import axios from 'axios'
 import { Repository, Remote } from 'nodegit'
+import { JiraClient } from './jiraClient'
 
 class GithubJiraPr extends Command {
   static description = 'Create GitHub PRs from JIRA tickets'
@@ -17,7 +18,6 @@ class GithubJiraPr extends Command {
   }
 
   jiraHost: string = ""
-  jiraUser: string = ""
   jiraAccessToken: string = ""
   jiraTicketId: string = ""
   baseBranch: string = ""
@@ -28,11 +28,17 @@ class GithubJiraPr extends Command {
     this.baseBranch = flags["base-branch"]
     this.jiraHost = flags["jira-host"] || 'jira.atlassian.com'
     this.jiraTicketId = flags["ticket-id"]
-    this.jiraUser = flags["jira-email"]
-    this.jiraAccessToken = flags["jira-access-token"]
+    let jiraUser = flags["jira-email"]
+    let jiraAccessToken = flags["jira-access-token"]
     this.githubAccessToken = flags["github-access-token"]
 
-    const jiraTicket = await this.getJiraTicket()
+    let jiraClient = new JiraClient({
+      username: jiraUser,
+      accessToken: jiraAccessToken,
+      host: this.jiraHost
+    })
+
+    const jiraTicket = await jiraClient.getJiraTicket(this.jiraTicketId)
     const repo = await Repository.open(".")
     const githubRemote = await this.getGitHubRemote(repo)
 
@@ -89,21 +95,6 @@ class GithubJiraPr extends Command {
     return {
       owner: parts[0],
       repo: parts[1].replace(/.git/, '')
-    }
-  }
-
-  async getJiraTicket() {
-    try {
-      const response = await axios({
-        url: `https://${this.jiraHost}/rest/api/latest/issue/${this.jiraTicketId}`,
-        auth: {
-          username: this.jiraUser,
-          password: this.jiraAccessToken
-        }
-      })
-      return response.data
-    } catch(err) {
-      this.error(`Unable to get JIRA ticket: ${err}`)
     }
   }
 }
