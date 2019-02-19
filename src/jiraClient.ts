@@ -1,9 +1,9 @@
 import axios from 'axios'
 
 export class JiraClient {
-  private username: string;
-  private accessToken: string;
-  private host: string;
+  username: string;
+  accessToken: string;
+  host: string;
 
   constructor(config: any) {
     this.username = config.username;

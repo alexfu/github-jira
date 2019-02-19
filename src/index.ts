@@ -1,8 +1,7 @@
-import {Command, flags} from '@oclif/command'
-import {CLIError} from '@oclif/errors'
-import axios from 'axios'
-import { Repository, Remote } from 'nodegit'
+import { Command, flags } from '@oclif/command'
+import { Repository } from 'nodegit'
 import { JiraClient } from './jiraClient'
+import { GitHubClient } from './githubClient'
 
 class GithubJiraPr extends Command {
   static description = 'Create GitHub PRs from JIRA tickets'
@@ -38,64 +37,26 @@ class GithubJiraPr extends Command {
       host: this.jiraHost
     })
 
+    let githubClient = new GitHubClient(this.githubAccessToken)
+
     const jiraTicket = await jiraClient.getJiraTicket(this.jiraTicketId)
-    const repo = await Repository.open(".")
-    const githubRemote = await this.getGitHubRemote(repo)
 
-    if (githubRemote) {
-      const result = await this.openPullRequest(repo, githubRemote, jiraTicket)
-      this.log(result.html_url)
-    } else {
-      throw new CLIError("The current git repo does not have any remotes!")
-    }
-  }
-
-  async getGitHubRemote(repo: Repository) {
-    const remotes = await this.getGitRemotes(repo)
-    return remotes.find((remote: Remote) => {
-      return remote.url().includes("git@github.com")
+    const result = await githubClient.openPullRequest({
+      repo: await Repository.open("."),
+      title: this.createPRTitle(jiraTicket),
+      description: this.createPRDescription(this.jiraHost, jiraTicket),
+      base: this.baseBranch
     })
+
+    this.log(result.html_url)
   }
 
-  async getGitRemotes(repo: Repository) {
-    const promises = (await repo.getRemotes()).map(async (remote: Remote) => {
-      return await repo.getRemote(remote)
-    })
-    return await Promise.all(promises)
+  private createPRTitle(jiraTicket: any) {
+    return `[${jiraTicket.key}] ${jiraTicket.fields.summary}`
   }
 
-  async openPullRequest(repo: Repository, githubRemote: Remote, jiraTicket: any) {
-    try {
-      const title = `[${jiraTicket.key}] ${jiraTicket.fields.summary}`
-      const description = `https://${this.jiraHost}/browse/${jiraTicket.key}`
-      const remoteUrl = this.parseGitHubRemoteUrl(githubRemote.url())
-      const branch = (await repo.getCurrentBranch()).shorthand()
-      const response = await axios({
-        method: "POST",
-        url: `https://api.github.com/repos/${remoteUrl.owner}/${remoteUrl.repo}/pulls`,
-        headers: {
-          "Authorization": `token ${this.githubAccessToken}`
-        },
-        data: {
-          title: title,
-          body: description,
-          head: branch,
-          base: this.baseBranch
-        }
-      })
-      return response.data
-    } catch(err) {
-      this.error(`Unable to open pull request: ${err}`)
-    }
-  }
-
-  parseGitHubRemoteUrl(url: string) {
-    // GitHub remote url format: git@github.com:owner/repo.git
-    const parts = url.split(":")[1].split("/")
-    return {
-      owner: parts[0],
-      repo: parts[1].replace(/.git/, '')
-    }
+  private createPRDescription(jiraHost: string, jiraTicket: any) {
+    return `https://${jiraHost}/browse/${jiraTicket.key}`
   }
 }
 
