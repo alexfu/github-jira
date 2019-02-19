@@ -14,6 +14,7 @@ class GithubJiraPr extends Command {
     "jira-email": flags.string({ required: true, description: 'email address associated with jira' }),
     "jira-access-token": flags.string({ required: true, description: 'jira access token' }),
     "github-access-token": flags.string({ required: true, description: 'github access token' }),
+    "pr-title": flags.string({ required: false, description: 'custom PR title' })
   }
 
   jiraHost: string = ""
@@ -21,6 +22,7 @@ class GithubJiraPr extends Command {
   jiraTicketId: string = ""
   baseBranch: string = ""
   githubAccessToken: string = ""
+  prTitleOverride: string | null = null;
 
   async run() {
     const {flags} = this.parse(GithubJiraPr)
@@ -30,6 +32,7 @@ class GithubJiraPr extends Command {
     let jiraUser = flags["jira-email"]
     let jiraAccessToken = flags["jira-access-token"]
     this.githubAccessToken = flags["github-access-token"]
+    this.prTitleOverride = flags["pr-title"] || null;
 
     let jiraClient = new JiraClient({
       username: jiraUser,
@@ -52,7 +55,7 @@ class GithubJiraPr extends Command {
   }
 
   private createPRTitle(jiraTicket: any) {
-    return `[${jiraTicket.key}] ${jiraTicket.fields.summary}`
+    return this.prTitleOverride || `[${jiraTicket.key}] ${jiraTicket.fields.summary}`;
   }
 
   private createPRDescription(jiraHost: string, jiraTicket: any) {
