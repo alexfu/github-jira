@@ -1,4 +1,5 @@
 import { Command, flags } from '@oclif/command'
+import cli from 'cli-ux'
 import { Repository } from 'nodegit'
 import { JiraClient } from './jiraClient'
 import { GitHubClient } from './githubClient'
@@ -8,7 +9,7 @@ class GithubJiraPr extends Command {
 
   static flags = {
     "help": flags.help({ char: 'h' }),
-    "base-branch": flags.string({ required: true, char: 'b', description: 'base branch for PR' }),
+    "base-branch": flags.string({ required: true, char: 'b', description: 'base branch for PR', default: 'master' }),
     "ticket-id": flags.string({ required: true, char: 't', description: 'jira ticket ID' }),
     "jira-host": flags.string({ description: 'custom host for jira (i.e. mycompany.atlassian.net)' }),
     "jira-email": flags.string({ required: true, description: 'email address associated with jira' }),
@@ -26,15 +27,26 @@ class GithubJiraPr extends Command {
       host: params.jiraHost
     })
 
+    const jiraTicket = await jiraClient.getJiraTicket(params.jiraTicketId)
+
+    this.makePullRequest(params, jiraTicket)
+  }
+
+  private async makePullRequest(params: any, jiraTicket: any) {
     let githubClient = new GitHubClient(params.githubAccessToken)
 
-    const jiraTicket = await jiraClient.getJiraTicket(params.jiraTicketId)
+    var baseBranch = params.baseBranch
+    var prTitle = params.prTitle || jiraTicket.fields.summary
+
+    // Confirm details
+    baseBranch = await cli.prompt('Base branch', { required: false, default: baseBranch })
+    prTitle = await cli.prompt('PR Title', { required: false, default: prTitle })
 
     const result = await githubClient.openPullRequest({
       repo: await Repository.open("."),
-      title: this.createPRTitle(jiraTicket, params.prTitleOverride),
+      title: `[${jiraTicket.key}] ${prTitle}`,
       description: this.createPRDescription(params.jiraHost, jiraTicket),
-      base: params.baseBranch
+      base: baseBranch
     })
 
     this.log(result.html_url)
@@ -48,7 +60,7 @@ class GithubJiraPr extends Command {
     const jiraUser = flags["jira-email"]
     const jiraAccessToken = flags["jira-access-token"]
     const githubAccessToken = flags["github-access-token"]
-    const prTitleOverride = flags["pr-title"] || null;
+    const prTitle = flags["pr-title"] || null;
 
     return {
       baseBranch: baseBranch,
@@ -57,15 +69,7 @@ class GithubJiraPr extends Command {
       jiraUser: jiraUser,
       jiraAccessToken: jiraAccessToken,
       githubAccessToken: githubAccessToken,
-      prTitleOverride: prTitleOverride
-    }
-  }  
-
-  private createPRTitle(jiraTicket: any, prTitleOverride: string | null) {
-    if (prTitleOverride) {
-      return `[${jiraTicket.key}] ${prTitleOverride}`
-    } else {
-      return `[${jiraTicket.key}] ${jiraTicket.fields.summary}`;
+      prTitle: prTitle
     }
   }
 
