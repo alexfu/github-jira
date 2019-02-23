@@ -17,45 +17,56 @@ class GithubJiraPr extends Command {
     "pr-title": flags.string({ required: false, description: 'custom PR title' })
   }
 
-  jiraHost: string = ""
-  jiraAccessToken: string = ""
-  jiraTicketId: string = ""
-  baseBranch: string = ""
-  githubAccessToken: string = ""
-  prTitleOverride: string | null = null;
-
   async run() {
-    const {flags} = this.parse(GithubJiraPr)
-    this.baseBranch = flags["base-branch"]
-    this.jiraHost = flags["jira-host"] || 'jira.atlassian.com'
-    this.jiraTicketId = flags["ticket-id"]
-    let jiraUser = flags["jira-email"]
-    let jiraAccessToken = flags["jira-access-token"]
-    this.githubAccessToken = flags["github-access-token"]
-    this.prTitleOverride = flags["pr-title"] || null;
+    const params = this.collectParams()
 
     let jiraClient = new JiraClient({
-      username: jiraUser,
-      accessToken: jiraAccessToken,
-      host: this.jiraHost
+      username: params.jiraUser,
+      accessToken: params.jiraAccessToken,
+      host: params.jiraHost
     })
 
-    let githubClient = new GitHubClient(this.githubAccessToken)
+    let githubClient = new GitHubClient(params.githubAccessToken)
 
-    const jiraTicket = await jiraClient.getJiraTicket(this.jiraTicketId)
+    const jiraTicket = await jiraClient.getJiraTicket(params.jiraTicketId)
 
     const result = await githubClient.openPullRequest({
       repo: await Repository.open("."),
-      title: this.createPRTitle(jiraTicket),
-      description: this.createPRDescription(this.jiraHost, jiraTicket),
-      base: this.baseBranch
+      title: this.createPRTitle(jiraTicket, params.prTitleOverride),
+      description: this.createPRDescription(params.jiraHost, jiraTicket),
+      base: params.baseBranch
     })
 
     this.log(result.html_url)
   }
 
-  private createPRTitle(jiraTicket: any) {
-    return this.prTitleOverride || `[${jiraTicket.key}] ${jiraTicket.fields.summary}`;
+  private collectParams() {
+    const {flags} = this.parse(GithubJiraPr)
+    const baseBranch = flags["base-branch"]
+    const jiraHost = flags["jira-host"] || 'jira.atlassian.com'
+    const jiraTicketId = flags["ticket-id"]
+    const jiraUser = flags["jira-email"]
+    const jiraAccessToken = flags["jira-access-token"]
+    const githubAccessToken = flags["github-access-token"]
+    const prTitleOverride = flags["pr-title"] || null;
+
+    return {
+      baseBranch: baseBranch,
+      jiraHost: jiraHost,
+      jiraTicketId: jiraTicketId,
+      jiraUser: jiraUser,
+      jiraAccessToken: jiraAccessToken,
+      githubAccessToken: githubAccessToken,
+      prTitleOverride: prTitleOverride
+    }
+  }  
+
+  private createPRTitle(jiraTicket: any, prTitleOverride: string | null) {
+    if (prTitleOverride) {
+      return `[${jiraTicket.key}] ${prTitleOverride}`
+    } else {
+      return `[${jiraTicket.key}] ${jiraTicket.fields.summary}`;
+    }
   }
 
   private createPRDescription(jiraHost: string, jiraTicket: any) {
