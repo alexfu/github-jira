@@ -27,7 +27,9 @@ class GithubJiraPr extends Command {
       host: params.jiraHost
     })
 
+    cli.action.start('Fetching JIRA ticket')
     const jiraTicket = await jiraClient.getJiraTicket(params.jiraTicketId)
+    cli.action.stop('done')
 
     this.makePullRequest(params, jiraTicket)
   }
@@ -42,12 +44,14 @@ class GithubJiraPr extends Command {
     baseBranch = await cli.prompt('Base branch', { required: false, default: baseBranch })
     prTitle = await cli.prompt('PR Title', { required: false, default: prTitle })
 
+    cli.action.start('Making pull request')
     const result = await githubClient.openPullRequest({
       repo: await Repository.open("."),
       title: `[${jiraTicket.key}] ${prTitle}`,
       description: this.createPRDescription(params.jiraHost, jiraTicket),
       base: baseBranch
     })
+    cli.action.stop('done')
 
     this.log(result.html_url)
   }
