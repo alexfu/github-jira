@@ -40,10 +40,6 @@ class GithubJiraPr extends Command {
     var baseBranch = params.baseBranch
     var prTitle = params.prTitle || jiraTicket.fields.summary
 
-    // Confirm details
-    baseBranch = await cli.prompt('Base branch', { required: false, default: baseBranch })
-    prTitle = await cli.prompt('PR Title', { required: false, default: prTitle })
-
     cli.action.start('Making pull request')
     const result = await githubClient.openPullRequest({
       repo: await Repository.open("."),
