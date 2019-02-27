@@ -11,7 +11,7 @@ class GithubJiraPr extends Command {
     "help": flags.help({ char: 'h' }),
     "base-branch": flags.string({ required: true, char: 'b', description: 'base branch for PR', default: 'master' }),
     "ticket-id": flags.string({ required: true, char: 't', description: 'jira ticket ID' }),
-    "jira-host": flags.string({ description: 'custom host for jira (i.e. mycompany.atlassian.net)' }),
+    "jira-host": flags.string({ description: 'custom host for jira (i.e. mycompany.atlassian.net)', default: 'jira.atlassian.com' }),
     "jira-email": flags.string({ required: true, description: 'email address associated with jira' }),
     "jira-access-token": flags.string({ required: true, description: 'jira access token' }),
     "github-access-token": flags.string({ required: true, description: 'github access token' }),
@@ -55,12 +55,12 @@ class GithubJiraPr extends Command {
   private collectParams() {
     const {flags} = this.parse(GithubJiraPr)
     const baseBranch = flags["base-branch"]
-    const jiraHost = flags["jira-host"] || 'jira.atlassian.com'
+    const jiraHost = flags["jira-host"]
     const jiraTicketId = flags["ticket-id"]
     const jiraUser = flags["jira-email"]
     const jiraAccessToken = flags["jira-access-token"]
     const githubAccessToken = flags["github-access-token"]
-    const prTitle = flags["pr-title"] || null;
+    const prTitle = flags["pr-title"]
 
     return {
       baseBranch: baseBranch,
