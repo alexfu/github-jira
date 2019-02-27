@@ -6,12 +6,11 @@ import { GitHubClient } from './githubClient'
 
 class GithubJiraPr extends Command {
   static description = 'Create GitHub PRs from JIRA tickets'
-
   static flags = {
     "help": flags.help({ char: 'h' }),
     "base-branch": flags.string({ required: true, char: 'b', description: 'base branch for PR', default: 'master' }),
     "ticket-id": flags.string({ required: true, char: 't', description: 'jira ticket ID' }),
-    "jira-host": flags.string({ description: 'custom host for jira (i.e. mycompany.atlassian.net)', default: 'jira.atlassian.com' }),
+    "jira-host": flags.string({ required: true, description: 'custom host for jira (i.e. mycompany.atlassian.net)', default: 'jira.atlassian.com' }),
     "jira-email": flags.string({ required: true, description: 'email address associated with jira' }),
     "jira-access-token": flags.string({ required: true, description: 'jira access token' }),
     "github-access-token": flags.string({ required: true, description: 'github access token' }),
@@ -52,7 +51,7 @@ class GithubJiraPr extends Command {
     this.log(result.html_url)
   }
 
-  private collectParams() {
+  private collectParams(): Params {
     const {flags} = this.parse(GithubJiraPr)
     const baseBranch = flags["base-branch"]
     const jiraHost = flags["jira-host"]
@@ -76,6 +75,16 @@ class GithubJiraPr extends Command {
   private createPRDescription(jiraHost: string, jiraTicket: any) {
     return `https://${jiraHost}/browse/${jiraTicket.key}`
   }
+}
+
+interface Params {
+  baseBranch: string
+  jiraUser: string
+  jiraHost: string
+  jiraTicketId: string
+  jiraAccessToken: string
+  githubAccessToken: string
+  prTitle?: string
 }
 
 export = GithubJiraPr
