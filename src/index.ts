@@ -1,80 +1,93 @@
-import { Command, flags } from '@oclif/command'
-import cli from 'cli-ux'
-import { Repository } from 'nodegit'
-import { JiraClient } from './jiraClient'
-import { GitHubClient } from './githubClient'
+import { Command, flags } from "@oclif/command"
+import cli from "cli-ux"
+import { Repository } from "nodegit"
+import { JiraClient } from "./jiraClient"
+import { GitHubClient } from "./githubClient"
 
 class GithubJiraPr extends Command {
-  static description = 'Create GitHub PRs from JIRA tickets'
-
+  static description = "Create GitHub PRs from JIRA tickets"
   static flags = {
-    "help": flags.help({ char: 'h' }),
-    "base-branch": flags.string({ required: true, char: 'b', description: 'base branch for PR', default: 'master' }),
-    "ticket-id": flags.string({ required: true, char: 't', description: 'jira ticket ID' }),
-    "jira-host": flags.string({ description: 'custom host for jira (i.e. mycompany.atlassian.net)', default: 'jira.atlassian.com' }),
-    "jira-email": flags.string({ required: true, description: 'email address associated with jira' }),
-    "jira-access-token": flags.string({ required: true, description: 'jira access token' }),
-    "github-access-token": flags.string({ required: true, description: 'github access token' }),
-    "pr-title": flags.string({ required: false, description: 'custom PR title' })
+    "help": flags.help({ char: "h" }),
+    "base-branch": flags.string({ char: "b", description: "base branch for PR" }),
+    "ticket-id": flags.string({ char: "t", description: "jira ticket ID" }),
+    "jira-host": flags.string({ description: "custom host for jira" }),
+    "jira-email": flags.string({ description: "email address associated with jira" }),
+    "jira-access-token": flags.string({ description: "jira access token" }),
+    "github-access-token": flags.string({ description: "github access token" }),
+    "pr-title": flags.string({ description: "custom PR title" }),
+    "interactive": flags.boolean({ char: "i", description: "interactive mode", default: false })
   }
+
+  private interactive: boolean = false
 
   async run() {
-    const params = this.collectParams()
+    const {flags} = this.parse(GithubJiraPr)
+    this.interactive = flags["interactive"]
 
-    let jiraClient = new JiraClient({
-      username: params.jiraUser,
-      accessToken: params.jiraAccessToken,
-      host: params.jiraHost
-    })
+    // JIRA
+    const jiraUser = await this.getFlagValue(flags, "jira-email")
+    const jiraAccessToken = await this.getFlagValue(flags, "jira-access-token")
+    const jiraHost = await this.getFlagValue(flags, "jira-host", "jira.atlassian.com")
+    const jiraTicketId = await this.getFlagValue(flags, "ticket-id")
+    const jiraTicket = await this.getJiraTicket(jiraAccessToken, jiraHost, jiraUser, jiraTicketId)
 
-    cli.action.start('Fetching JIRA ticket')
-    const jiraTicket = await jiraClient.getJiraTicket(params.jiraTicketId)
-    cli.action.stop('done')
+    // GitHub
+    const baseBranch = await this.getFlagValue(flags, "base-branch", "master")
+    const githubAccessToken = await this.getFlagValue(flags, "github-access-token")
+    const prTitle = await this.getFlagValue(flags, "pr-title", jiraTicket.fields.summary)
+    const prTitleWithTicketId = this.createPRTitle(prTitle, jiraTicket)
+    const prDescription = this.createPRDescription(jiraHost, jiraTicket)
+    const pr = await this.makePullRequest(githubAccessToken, baseBranch, prTitleWithTicketId, prDescription)
 
-    this.makePullRequest(params, jiraTicket)
+    this.log(pr.html_url)
   }
 
-  private async makePullRequest(params: any, jiraTicket: any) {
-    let githubClient = new GitHubClient(params.githubAccessToken)
+  private async getJiraTicket(accessToken: string, host: string, username: string, ticketId: string) {
+    let jiraClient = new JiraClient({
+      username: username,
+      accessToken: accessToken,
+      host: host
+    })
 
-    var baseBranch = params.baseBranch
-    var prTitle = params.prTitle || jiraTicket.fields.summary
+    cli.action.start("Fetching JIRA ticket")
+    const jiraTicket = await jiraClient.getJiraTicket(ticketId)
+    cli.action.stop("done")
 
-    cli.action.start('Making pull request')
+    return jiraTicket
+  }
+
+  private async makePullRequest(accessToken: string, base: string, title: string, description: string) {
+    let githubClient = new GitHubClient(accessToken)
+
+    cli.action.start("Making pull request")
     const result = await githubClient.openPullRequest({
       repo: await Repository.open("."),
-      title: `[${jiraTicket.key}] ${prTitle}`,
-      description: this.createPRDescription(params.jiraHost, jiraTicket),
-      base: baseBranch
+      title: title,
+      description: description,
+      base: base
     })
-    cli.action.stop('done')
+    cli.action.stop("done")
 
-    this.log(result.html_url)
+    return result
   }
 
-  private collectParams() {
-    const {flags} = this.parse(GithubJiraPr)
-    const baseBranch = flags["base-branch"]
-    const jiraHost = flags["jira-host"]
-    const jiraTicketId = flags["ticket-id"]
-    const jiraUser = flags["jira-email"]
-    const jiraAccessToken = flags["jira-access-token"]
-    const githubAccessToken = flags["github-access-token"]
-    const prTitle = flags["pr-title"]
-
-    return {
-      baseBranch: baseBranch,
-      jiraHost: jiraHost,
-      jiraTicketId: jiraTicketId,
-      jiraUser: jiraUser,
-      jiraAccessToken: jiraAccessToken,
-      githubAccessToken: githubAccessToken,
-      prTitle: prTitle
-    }
+  private createPRTitle(title: string, jiraTicket: any) {
+    return `[${jiraTicket.key}] ${title}`
   }
 
   private createPRDescription(jiraHost: string, jiraTicket: any) {
     return `https://${jiraHost}/browse/${jiraTicket.key}`
+  }
+
+  private async getFlagValue(flags: any, flag: string, defaultValue?: any) {
+    const value = flags[flag]
+    if (value) {
+      return value
+    } else if (this.interactive) {
+      return await cli.prompt(flag, { required: defaultValue === undefined, default: defaultValue })
+    } else {
+      return defaultValue || this.error(`Missing --${flag} flag!`)
+    }
   }
 }
 
