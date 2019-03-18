@@ -7,21 +7,24 @@ USAGE
   $ github-jira-pr
 
 OPTIONS
-  -b, --base-branch=base-branch              (required) [default: master] base branch for PR
+  -b, --base-branch=base-branch              base branch for PR
   -h, --help                                 show CLI help
-  -t, --ticket-id=ticket-id                  (required) jira ticket ID
-  --github-access-token=github-access-token  (required) github access token
-  --jira-access-token=jira-access-token      (required) jira access token
-  --jira-email=jira-email                    (required) email address associated with jira
-  --jira-host=jira-host                      custom host for jira (i.e. mycompany.atlassian.net)
+  -i, --interactive                          interactive mode
+  -t, --ticket-id=ticket-id                  jira ticket ID
+  --github-access-token=github-access-token  github access token
+  --jira-access-token=jira-access-token      jira access token
+  --jira-email=jira-email                    email address associated with jira
+  --jira-host=jira-host                      custom host for jira
   --pr-title=pr-title                        custom PR title
 ```
 
-# How does it work?
+# Features
 
-`github-jira-pr` will pull the title of the JIRA ticket and assign it as the PR title. Additionally, each PR title will be prefixed with the ticket ID in square brackets (i.e. **[BUY-123] Fix app crashes**).
-
-Also, the PR description will include a link to the JIRA ticket.
+- Uses JIRA ticket title as PR title
+- Prepends JIRA ticket ID to PR title
+- Adds link to JIRA ticket in PR description
+- Provides option to override PR title
+- Interactive mode
 
 # Install
 
