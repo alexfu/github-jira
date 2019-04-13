@@ -1,9 +1,9 @@
 {
-  "name": "github-jira-pr",
+  "name": "github-jira",
   "version": "0.2.1",
   "author": "Alex Fu @alexfu",
   "bin": {
-    "github-jira-pr": "./bin/run"
+    "github-jira": "./bin/run"
   },
   "bugs": "https://github.com/alexfu/mynewcli/issues",
   "dependencies": {
@@ -13,6 +13,7 @@
     "@types/nodegit": "^0.22.4",
     "axios": "^0.18.0",
     "cli-ux": "^5.2.0",
+    "inquirer": "^6.2.2",
     "nodegit": "^0.23.0",
     "tslib": "^1.9.3"
   },
@@ -37,7 +38,7 @@
     "/bin",
     "/lib"
   ],
-  "homepage": "https://github.com/alexfu/mynewcli",
+  "homepage": "https://github.com/alexfu/github-jira",
   "keywords": [
     "oclif"
   ],
@@ -45,10 +46,15 @@
   "main": "lib/index.js",
   "oclif": {
     "macos": {
-      "identifier": "com.alexfu.github-jira-pr"
-    }
+      "identifier": "com.alexfu.github-jira"
+    },
+    "commands": "./lib/commands",
+    "bin": "github-jira",
+    "plugins": [
+      "@oclif/plugin-help"
+    ]
   },
-  "repository": "alexfu/mynewcli",
+  "repository": "alexfu/github-jira",
   "scripts": {
     "posttest": "tslint -p test -t stylish",
     "prepack": "rm -rf lib && tsc -b",
