@@ -39,7 +39,8 @@ export default class Pr extends Command {
           const branches = (await repo.getReferences(Reference.TYPE.LISTALL))
             .filter((ref) => { return ref.isBranch(); })
             .map((ref) => { return {name: ref.shorthand()} });
-          baseBranch = await inquirer.prompt([{name: "base-branch", message: "base-branch", type: "list", choices: branches}]);
+          const answer = await inquirer.prompt([{name: "branch", message: "base-branch", type: "list", choices: branches}]);
+          baseBranch = (<any>answer).branch;
         } else {
           baseBranch = await this.getFlagValue(flags, "base-branch", "master")
         }
