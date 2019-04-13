@@ -1,8 +1,9 @@
 import {Command, flags} from "@oclif/command"
 import cli from "cli-ux"
-import { Repository } from "nodegit"
+import { Repository, Reference } from "nodegit"
 import { JiraClient } from "../jiraClient"
 import { GitHubClient } from "../githubClient"
+import * as inquirer from "inquirer"
 
 export default class Pr extends Command {
     static description = "Create GitHub PRs from JIRA tickets"
@@ -32,7 +33,17 @@ export default class Pr extends Command {
         const jiraTicket = await this.getJiraTicket(jiraAccessToken, jiraHost, jiraUser, jiraTicketId)
 
         // GitHub
-        const baseBranch = await this.getFlagValue(flags, "base-branch", "master")
+        var baseBranch = "master";
+        if (this.interactive) {
+          const repo = await Repository.open(".");
+          const branches = (await repo.getReferences(Reference.TYPE.LISTALL))
+            .filter((ref) => { return ref.isBranch(); })
+            .map((ref) => { return {name: ref.shorthand()} });
+          baseBranch = await inquirer.prompt([{name: "base-branch", message: "base-branch", type: "list", choices: branches}]);
+        } else {
+          baseBranch = await this.getFlagValue(flags, "base-branch", "master")
+        }
+
         const githubAccessToken = await this.getFlagValue(flags, "github-access-token")
         const prTitle = await this.getFlagValue(flags, "pr-title", jiraTicket.fields.summary)
         const prTitleWithTicketId = this.createPRTitle(prTitle, jiraTicket)
