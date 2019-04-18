@@ -4,17 +4,15 @@ import { Repository, Reference } from "nodegit"
 import { JiraClient } from "../jiraClient"
 import { GitHubClient } from "../githubClient"
 import * as inquirer from "inquirer"
+import BaseCommand from "../base"
 
-export default class Pr extends Command {
+export default class Pr extends BaseCommand {
     static description = "Create GitHub PRs from JIRA tickets"
     static flags = {
+        ...BaseCommand.flags,
         "help": flags.help({ char: "h" }),
         "base-branch": flags.string({ char: "b", description: "base branch for PR" }),
         "ticket-id": flags.string({ char: "t", description: "jira ticket ID" }),
-        "jira-host": flags.string({ description: "custom host for jira" }),
-        "jira-email": flags.string({ description: "email address associated with jira" }),
-        "jira-access-token": flags.string({ description: "jira access token" }),
-        "github-access-token": flags.string({ description: "github access token" }),
         "pr-title": flags.string({ description: "custom PR title" }),
         "interactive": flags.boolean({ char: "i", description: "interactive mode", default: false })
     }
