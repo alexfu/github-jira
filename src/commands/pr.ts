@@ -13,8 +13,7 @@ export default class Pr extends BaseCommand {
         "help": flags.help({ char: "h" }),
         "base-branch": flags.string({ char: "b", description: "base branch for PR" }),
         "ticket-id": flags.string({ char: "t", description: "jira ticket ID" }),
-        "pr-title": flags.string({ description: "custom PR title" }),
-        "interactive": flags.boolean({ char: "i", description: "interactive mode", default: false })
+        "pr-title": flags.string({ description: "custom PR title" })
     }
 
     private interactive: boolean = false
