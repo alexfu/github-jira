@@ -93,7 +93,8 @@ export default class Pr extends BaseCommand {
         if (value) {
           return value
         } else if (this.interactive) {
-          return await cli.prompt(flag, { required: defaultValue === undefined, default: defaultValue })
+          const response = await inquirer.prompt([{ name: flag, message: flag, default: defaultValue }])
+          return response[flag]
         } else {
           return defaultValue || this.error(`Missing --${flag} flag!`)
         }
