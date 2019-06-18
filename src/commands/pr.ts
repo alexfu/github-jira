@@ -22,29 +22,27 @@ export default class Pr extends BaseCommand {
         const {flags} = this.parse(Pr)
 
         // JIRA
-        const jiraTicketId = await this.getFlagValue(flags, "ticket-id")
+        const jiraTicketId = await this.getFlagValue2(flags, "ticket-id", this.valuePrompter())
         const jiraTicket = await this.getJiraTicket(this.jiraAccessToken, this.jiraHost, this.jiraUser, jiraTicketId)
 
         // GitHub
-        var baseBranch = "master";
-        if (this.interactive) {
-          const repo = await Repository.open(".");
-          const branches = (await repo.getReferences(Reference.TYPE.LISTALL))
-            .filter((ref) => { return ref.isBranch(); })
-            .map((ref) => { return {name: ref.shorthand()} });
-          const answer = await inquirer.prompt([{name: "branch", message: "base-branch", type: "list", choices: branches}]);
-          baseBranch = (<any>answer).branch;
-        } else {
-          baseBranch = await this.getFlagValue(flags, "base-branch", "master")
-        }
+        const baseBranch = await this.getFlagValue2(flags, "base-branch", this.listPrompter(this.branchChoiceProvider), "master")
+        const githubAccessToken = await this.getFlagValue2(flags, "github-access-token", this.valuePrompter())
+        const prTitle = await this.getFlagValue2(flags, "pr-title", this.valuePrompter(jiraTicket.fields.summary), jiraTicket.fields.summary)
+        const draft = await this.getFlagValue2(flags, "draft", this.confirmPrompter(false), false)
 
-        const githubAccessToken = await this.getFlagValue(flags, "github-access-token")
-        const prTitle = await this.getFlagValue(flags, "pr-title", jiraTicket.fields.summary)
         const prTitleWithTicketId = this.createPRTitle(prTitle, jiraTicket)
         const prDescription = this.createPRDescription(this.jiraHost, jiraTicket)
-        const pr = await this.makePullRequest(githubAccessToken, baseBranch, prTitleWithTicketId, prDescription)
+        const pr = await this.makePullRequest(githubAccessToken, baseBranch, prTitleWithTicketId, prDescription, draft)
 
         this.log(pr.html_url)
+    }
+
+    private async branchChoiceProvider(): Promise<{}[]> {
+        const repo = await Repository.open(".");
+        return (await repo.getReferences(Reference.TYPE.LISTALL))
+          .filter((ref) => { return ref.isBranch(); })
+          .map((ref) => { return {name: ref.shorthand()} });
     }
 
     private async getJiraTicket(accessToken: string, host: string, username: string, ticketId: string) {
@@ -61,7 +59,7 @@ export default class Pr extends BaseCommand {
         return jiraTicket
       }
 
-      private async makePullRequest(accessToken: string, base: string, title: string, description: string) {
+      private async makePullRequest(accessToken: string, base: string, title: string, description: string, draft: boolean) {
         let githubClient = new GitHubClient(accessToken)
 
         cli.action.start("Making pull request")
@@ -69,7 +67,8 @@ export default class Pr extends BaseCommand {
           repo: await Repository.open("."),
           title: title,
           description: description,
-          base: base
+          base: base,
+          draft: draft
         })
         cli.action.stop("done")
 

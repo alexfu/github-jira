@@ -23,13 +23,46 @@ export default abstract class BaseCommand extends Command {
         this.jiraAccessToken = await this.getFlagValue(flags, "jira-access-token")
     }
 
+    listPrompter(choicesProvider: () => Promise<{}[]>) {
+        return async (name: string) => {
+            const choices = await choicesProvider.call(this)
+            const answer = await inquirer.prompt([{ name: name, message: name, type: "list", choices: choices }])
+            return (<any>answer)[name]
+        }
+    }
+
+    valuePrompter(defaultValue?: any) {
+        return async (name: string) => {
+            const answer = await inquirer.prompt([{ name: name, message: name, default: defaultValue}])
+            return (<any>answer)[name]
+        }
+    }
+
+    confirmPrompter(defaultValue: boolean) {
+        return async (name: string) => {
+            const answer = await inquirer.prompt([{ name: name, message: name, type: "confirm", default: defaultValue}])
+            return (<any>answer)[name]
+        }
+    }
+
+    async getFlagValue2(flags: {}, flag: string, prompter: (name: string) => Promise<string>, defaultValue?: any) {
+        const value = (<any>flags)[flag]
+        if (value) {
+          return value
+        } else if (this.interactive) {
+            return await prompter.call(this, flag);
+        } else {
+          return defaultValue || this.error(`Missing --${flag} flag!`)
+        }
+    }
+
     async getFlagValue(flags: any, flag: string, defaultValue?: any) {
         const value = flags[flag]
         if (value) {
           return value
         } else if (this.interactive) {
-          const response = await inquirer.prompt([{ name: flag, message: flag, default: defaultValue }])
-          return response[flag]
+          const answer = await inquirer.prompt([{ name: flag, message: flag, default: defaultValue }])
+          return (<any>answer)[flag]
         } else {
           return defaultValue || this.error(`Missing --${flag} flag!`)
         }
