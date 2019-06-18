@@ -14,6 +14,7 @@ export class GitHubClient {
     let title = opts.title
     let description = opts.description
     let base = opts.base
+    let draft = opts.draft || false
 
     let githubRemote = await this.getGitHubRemote(repo)
 
@@ -27,13 +28,15 @@ export class GitHubClient {
       method: "POST",
       url: `https://api.github.com/repos/${remoteUrl.owner}/${remoteUrl.repo}/pulls`,
       headers: {
-        "Authorization": `token ${this.accessToken}`
+        "Authorization": `token ${this.accessToken}`,
+        "Accept": "application/vnd.github.shadow-cat-preview+json"
       },
       data: {
         title: title,
         body: description,
         head: branch,
-        base: base
+        base: base,
+        draft: draft
       }
     })
 
