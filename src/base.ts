@@ -10,9 +10,28 @@ export default abstract class BaseCommand extends Command {
         "interactive": flags.boolean({ char: "i", description: "interactive mode", default: false })
     }
 
+    interactive: boolean = false
+    jiraHost: string = ""
+    jiraUser: string = ""
+    jiraAccessToken: string = ""
+
     async run() {
         const {flags} = this.parse(BaseCommand)
-
-        const jiraHost = (await inquirer.prompt([{name: "jiraHost", message: "jira-host", default: "jira.atlassian.com"}])).jiraHost
+        this.interactive = flags["interactive"]
+        this.jiraUser = await this.getFlagValue(flags, "jira-email")
+        this.jiraHost = await this.getFlagValue(flags, "jira-host", "jira.atlassian.com")
+        this.jiraAccessToken = await this.getFlagValue(flags, "jira-access-token")
     }
+
+    async getFlagValue(flags: any, flag: string, defaultValue?: any) {
+        const value = flags[flag]
+        if (value) {
+          return value
+        } else if (this.interactive) {
+          const response = await inquirer.prompt([{ name: flag, message: flag, default: defaultValue }])
+          return response[flag]
+        } else {
+          return defaultValue || this.error(`Missing --${flag} flag!`)
+        }
+      }
 }
