@@ -33,7 +33,7 @@ export default abstract class BaseCommand extends Command {
 
     valuePrompter(defaultValue?: any) {
         return async (name: string) => {
-            const answer = await inquirer.prompt([{ name: name, message: name, default: defaultValue}])
+            const answer = await inquirer.prompt([{ name: name, message: name, type: "input", default: defaultValue}])
             return (<any>answer)[name]
         }
     }
@@ -41,6 +41,13 @@ export default abstract class BaseCommand extends Command {
     confirmPrompter(defaultValue: boolean) {
         return async (name: string) => {
             const answer = await inquirer.prompt([{ name: name, message: name, type: "confirm", default: defaultValue}])
+            return (<any>answer)[name]
+        }
+    }
+
+    editorPrompter() {
+        return async (name: string) => {
+            const answer = await inquirer.prompt([{ name: name, message: name, type: "editor" }])
             return (<any>answer)[name]
         }
     }
@@ -66,5 +73,5 @@ export default abstract class BaseCommand extends Command {
         } else {
           return defaultValue || this.error(`Missing --${flag} flag!`)
         }
-      }
+    }
 }

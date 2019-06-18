@@ -14,7 +14,8 @@ export default class Pr extends BaseCommand {
         "base-branch": flags.string({ char: "b", description: "base branch for PR" }),
         "ticket-id": flags.string({ char: "t", description: "jira ticket ID" }),
         "pr-title": flags.string({ description: "custom PR title" }),
-        "draft": flags.boolean({ description: "draft PR" })
+        "draft": flags.boolean({ description: "draft PR" }),
+        "description": flags.string({ description: "PR description" })
     }
 
     async run() {
@@ -30,9 +31,10 @@ export default class Pr extends BaseCommand {
         const githubAccessToken = await this.getFlagValue2(flags, "github-access-token", this.valuePrompter())
         const prTitle = await this.getFlagValue2(flags, "pr-title", this.valuePrompter(jiraTicket.fields.summary), jiraTicket.fields.summary)
         const draft = await this.getFlagValue2(flags, "draft", this.confirmPrompter(false), false)
+        const description = await this.getFlagValue2(flags, "description", this.editorPrompter())
 
         const prTitleWithTicketId = this.createPRTitle(prTitle, jiraTicket)
-        const prDescription = this.createPRDescription(this.jiraHost, jiraTicket)
+        const prDescription = this.createPRDescription(description, jiraTicket)
         const pr = await this.makePullRequest(githubAccessToken, baseBranch, prTitleWithTicketId, prDescription, draft)
 
         this.log(pr.html_url)
@@ -79,7 +81,12 @@ export default class Pr extends BaseCommand {
         return `[${jiraTicket.key}] ${title}`
       }
 
-      private createPRDescription(jiraHost: string, jiraTicket: any) {
-        return `https://${jiraHost}/browse/${jiraTicket.key}`
+      private createPRDescription(jiraTicket: {}, customDescription?: string) {
+          const jiraUrl = `https://${this.jiraHost}/browse/${jiraTicket.key}`
+          if (customDescription) {
+            return `${customDescription}\n${jiraUrl}`
+          } else {
+              return jiraUrl
+          }
       }
 }
