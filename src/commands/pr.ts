@@ -13,7 +13,8 @@ export default class Pr extends BaseCommand {
         "help": flags.help({ char: "h" }),
         "base-branch": flags.string({ char: "b", description: "base branch for PR" }),
         "ticket-id": flags.string({ char: "t", description: "jira ticket ID" }),
-        "pr-title": flags.string({ description: "custom PR title" })
+        "pr-title": flags.string({ description: "custom PR title" }),
+        "draft": flags.boolean({ description: "draft PR" })
     }
 
     async run() {
