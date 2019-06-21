@@ -34,7 +34,7 @@ export default class Pr extends BaseCommand {
         const description = await this.getFlagValue2(flags, "description", this.editorPrompter())
 
         const prTitleWithTicketId = this.createPRTitle(prTitle, jiraTicket)
-        const prDescription = this.createPRDescription(description, jiraTicket)
+        const prDescription = this.createPRDescription(jiraTicket, description)
         const pr = await this.makePullRequest(githubAccessToken, baseBranch, prTitleWithTicketId, prDescription, draft)
 
         this.log(pr.html_url)
