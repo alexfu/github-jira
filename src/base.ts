@@ -15,14 +15,6 @@ export default abstract class BaseCommand extends Command {
     jiraUser: string = ""
     jiraAccessToken: string = ""
 
-    async run() {
-        const {flags} = this.parse(BaseCommand)
-        this.interactive = flags["interactive"]
-        this.jiraUser = await this.getFlagValue(flags, "jira-email")
-        this.jiraHost = await this.getFlagValue(flags, "jira-host", "jira.atlassian.com")
-        this.jiraAccessToken = await this.getFlagValue(flags, "jira-access-token")
-    }
-
     listPrompter(choicesProvider: () => Promise<{}[]>) {
         return async (name: string) => {
             const choices = await choicesProvider.call(this)
@@ -52,9 +44,16 @@ export default abstract class BaseCommand extends Command {
         }
     }
 
+    async parseBaseFlags(flags: any) {
+        this.interactive = flags["interactive"]
+        this.jiraUser = await this.getFlagValue(flags, "jira-email")
+        this.jiraHost = await this.getFlagValue(flags, "jira-host", "jira.atlassian.com")
+        this.jiraAccessToken = await this.getFlagValue(flags, "jira-access-token")
+    }
+
     async getFlagValue2(flags: {}, flag: string, prompter: (name: string) => Promise<string>, defaultValue?: any) {
         const value = (<any>flags)[flag]
-        if (value) {
+        if (value !== undefined) {
           return value
         } else if (this.interactive) {
             return await prompter.call(this, flag);

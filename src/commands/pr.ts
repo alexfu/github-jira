@@ -19,8 +19,8 @@ export default class Pr extends BaseCommand {
     }
 
     async run() {
-        await super.run()
         const {flags} = this.parse(Pr)
+        await this.parseBaseFlags(flags)
 
         // JIRA
         const jiraTicketId = await this.getFlagValue2(flags, "ticket-id", this.valuePrompter())
@@ -31,7 +31,7 @@ export default class Pr extends BaseCommand {
         const githubAccessToken = await this.getFlagValue2(flags, "github-access-token", this.valuePrompter())
         const prTitle = await this.getFlagValue2(flags, "pr-title", this.valuePrompter(jiraTicket.fields.summary), jiraTicket.fields.summary)
         const draft = await this.getFlagValue2(flags, "draft", this.confirmPrompter(false), false)
-        const description = await this.getFlagValue2(flags, "description", this.editorPrompter())
+        const description = await this.getFlagValue2(flags, "description", this.editorPrompter(), "")
 
         const prTitleWithTicketId = this.createPRTitle(prTitle, jiraTicket)
         const prDescription = this.createPRDescription(jiraTicket, description)
@@ -83,7 +83,7 @@ export default class Pr extends BaseCommand {
 
       private createPRDescription(jiraTicket: {}, customDescription?: string) {
           const jiraUrl = `https://${this.jiraHost}/browse/${jiraTicket.key}`
-          if (customDescription) {
+          if (customDescription !== undefined && customDescription.length > 0) {
             return `${customDescription}\n${jiraUrl}`
           } else {
               return jiraUrl
