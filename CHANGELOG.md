@@ -1,5 +1,15 @@
 # Change Log
 
+## [v1.2.0](https://github.com/alexfu/github-jira-pr/tree/v1.2.0) (2019-08-14)
+[Full Changelog](https://github.com/alexfu/github-jira-pr/compare/v1.1.0...v1.2.0)
+
+## [v1.1.0](https://github.com/alexfu/github-jira-pr/tree/v1.1.0) (2019-06-18)
+[Full Changelog](https://github.com/alexfu/github-jira-pr/compare/v0.2.1...v1.1.0)
+
+**Merged pull requests:**
+
+- Multi command [\#3](https://github.com/alexfu/github-jira-pr/pull/3) ([alexfu](https://github.com/alexfu))
+
 ## [v0.2.1](https://github.com/alexfu/github-jira-pr/tree/v0.2.1) (2019-03-07)
 [Full Changelog](https://github.com/alexfu/github-jira-pr/compare/v0.2.0...v0.2.1)
 
