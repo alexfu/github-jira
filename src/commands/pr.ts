@@ -47,9 +47,14 @@ export default class Pr extends BaseCommand {
 
         const prTitleWithTicketId = this.createPRTitle(prTitle, jiraTicket)
         const prDescription = this.createPRDescription(jiraTicket, description)
-        const pr = await this.makePullRequest(githubAccessToken, baseBranch, prTitleWithTicketId, prDescription, draft)
 
-        this.log(pr.html_url)
+        try {
+          const pr = await this.makePullRequest(githubAccessToken, baseBranch, prTitleWithTicketId, prDescription, draft)
+          this.log(pr.html_url)
+        } catch (error) {
+          console.error(error.message)
+          console.log(error.response.data)
+        }
     }
 
     private async branchChoiceProvider(): Promise<{}[]> {
