@@ -31,7 +31,19 @@ export default class Pr extends BaseCommand {
         const githubAccessToken = await this.getFlagValue2(flags, "github-access-token", this.valuePrompter())
         const prTitle = await this.getFlagValue2(flags, "pr-title", this.valuePrompter(jiraTicket.fields.summary), jiraTicket.fields.summary)
         const draft = await this.getFlagValue2(flags, "draft", this.confirmPrompter(false), false)
-        const description = await this.getFlagValue2(flags, "description", this.editorPrompter(), "")
+
+        let description: string
+        if (flags.interactive) {
+          // Ask if user wants to input a description
+          const answer = await inquirer.prompt([{ name: "writeDescription", message: "Would you like to enter a description?", type: "confirm", default: false}])
+          if ((<any>answer).writeDescription) {
+            description = await this.getFlagValue2(flags, "description", this.editorPrompter(), "")
+          } else {
+            description = ""
+          }
+        } else {
+          description = await this.getFlagValue2(flags, "description", this.editorPrompter(), "")
+        }
 
         const prTitleWithTicketId = this.createPRTitle(prTitle, jiraTicket)
         const prDescription = this.createPRDescription(jiraTicket, description)
