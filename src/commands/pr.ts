@@ -98,7 +98,7 @@ export default class Pr extends BaseCommand {
         return `[${jiraTicket.key}] ${title}`
       }
 
-      private createPRDescription(jiraTicket: {}, customDescription?: string) {
+      private createPRDescription(jiraTicket: any, customDescription?: string) {
           const jiraUrl = `https://${this.jiraHost}/browse/${jiraTicket.key}`
           if (customDescription !== undefined && customDescription.length > 0) {
             return `${customDescription}\n${jiraUrl}`

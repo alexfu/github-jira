@@ -51,7 +51,7 @@ export class GitHubClient {
   }
 
   private async getGitRemotes(repo: Repository) {
-    const promises = (await repo.getRemotes()).map(async (remote: Remote) => {
+    const promises = (await repo.getRemotes()).map(async (remote: string) => {
       return await repo.getRemote(remote)
     })
     return await Promise.all(promises)
