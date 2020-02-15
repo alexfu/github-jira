@@ -33,12 +33,12 @@ export default class Pr extends BaseCommand {
           }
           return 'Jira ticket ID must not be empty'
         }
-        flags['ticket-id'] = await this.promptInput('Jira ticket ID', undefined, validator)
+        flags['ticket-id'] = await this.promptInput({message: 'Jira ticket ID', validator})
       }
     }
 
     const jiraTicketId = flags['ticket-id'] || this.error('Missing ticket ID!')
-    const jiraTicket = await this.getJiraTicket(config.jiraAccessToken, config.jiraHost, config.jiraEmail, jiraTicketId)
+    const jiraTicket = await this.getJiraTicket({accessToken: config.jiraAccessToken, host: config.jiraHost, username: config.jiraEmail, ticketId: jiraTicketId})
     const jiraTicketURL = `https://${config.jiraHost}/browse/${jiraTicket.key}`
 
         // Github
@@ -55,15 +55,15 @@ export default class Pr extends BaseCommand {
       }
 
       if (!flags['pr-title']) {
-        flags['pr-title'] = await this.promptInput('Custom pull request title', jiraTicket.fields.summary)
+        flags['pr-title'] = await this.promptInput({message: 'Custom pull request title', default: jiraTicket.fields.summary})
       }
 
       if (!flags.draft) {
-        flags.draft = await this.promptConfirm('Draft pull request?')
+        flags.draft = await this.promptConfirm({message: 'Draft pull request?'})
       }
 
       if (!flags.description) {
-        flags.description = await this.promptInput('Pull request description')
+        flags.description = await this.promptInput({message: 'Pull request description'})
       }
     }
 
@@ -73,7 +73,7 @@ export default class Pr extends BaseCommand {
     const draft = flags.draft
 
     try {
-      const pr = await this.makePullRequest(config.githubAccessToken, baseBranch, prTitle, prDescription, draft)
+      const pr = await this.makePullRequest({accessToken: config.githubAccessToken, base: baseBranch, title: prTitle, description: prDescription, draft})
       this.log(pr.html_url)
     } catch (error) {
       this.log(error.response.data)
@@ -81,23 +81,23 @@ export default class Pr extends BaseCommand {
     }
   }
 
-  private async promptInput(message: string, defaultValue?: string, validator?: (value: string) => string | boolean): Promise<string> {
+  private async promptInput(args: {message: string, default?: string, validator?(value: string): string | boolean}): Promise<string> {
     const response: any = await inquirer.prompt({
       name: 'result',
-      message,
+      message: args.message,
       type: 'input',
-      default: defaultValue,
-      validate: validator
+      default: args.default,
+      validate: args.validator
     })
     return response.result
   }
 
-  private async promptConfirm(message: string, defaultValue?: boolean): Promise<boolean> {
+  private async promptConfirm(args: {message: string, default?: boolean}): Promise<boolean> {
     const response: any = await inquirer.prompt({
       name: 'result',
-      message,
+      message: args.message,
       type: 'confirm',
-      default: defaultValue || false
+      default: args.default || false
     })
     return response.result
   }
@@ -110,30 +110,30 @@ export default class Pr extends BaseCommand {
       .map(ref => ({name: ref.shorthand()}))
   }
 
-  private async getJiraTicket(accessToken: string, host: string, username: string, ticketId: string) {
+  private async getJiraTicket(args: {accessToken: string, host: string, username: string, ticketId: string}) {
     let jiraClient = new JiraClient({
-      username,
-      accessToken,
-      host
+      username: args.username,
+      accessToken: args.accessToken,
+      host: args.host
     })
 
     cli.action.start('Fetching JIRA ticket')
-    const jiraTicket = await jiraClient.getJiraTicket(ticketId)
+    const jiraTicket = await jiraClient.getJiraTicket(args.ticketId)
     cli.action.stop('done')
 
     return jiraTicket
   }
 
-  private async makePullRequest(accessToken: string, base: string, title: string, description: string, draft: boolean) {
-    let githubClient = new GitHubClient(accessToken)
+  private async makePullRequest(args: {accessToken: string, base: string, title: string, description: string, draft: boolean}) {
+    let githubClient = new GitHubClient(args.accessToken)
 
     cli.action.start('Making pull request')
     const result = await githubClient.openPullRequest({
       repo: await Repository.open('.'),
-      title,
-      description,
-      base,
-      draft
+      title: args.title,
+      description: args.description,
+      base: args.base,
+      draft: args.draft
     })
     cli.action.stop('done')
 
