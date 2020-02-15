@@ -11,6 +11,8 @@
     "allowSyntheticDefaultImports": true
   },
   "include": [
-    "src/**/*"
+    "src/*",
+    "src/commands/**/*",
+    "src/lib/*"
   ]
 }

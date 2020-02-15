@@ -1,14 +1,14 @@
 import axios from 'axios'
 
 export class JiraClient {
-  username: string;
-  accessToken: string;
-  host: string;
+  username: string
+  accessToken: string
+  host: string
 
   constructor(config: any) {
-    this.username = config.username;
-    this.accessToken = config.accessToken;
-    this.host = config.host;
+    this.username = config.username
+    this.accessToken = config.accessToken
+    this.host = config.host
   }
 
   async getJiraTicket(ticketId: string) {
