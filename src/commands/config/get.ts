@@ -1,5 +1,6 @@
-import { flags } from '@oclif/command'
-import BaseCommand from "../../BaseCommand"
+import {flags} from '@oclif/command'
+
+import BaseCommand from '../../base-command'
 
 export default class ConfigGet extends BaseCommand {
   static description = 'view configuration settings'
@@ -9,11 +10,11 @@ export default class ConfigGet extends BaseCommand {
   }
 
   static args = [
-    { name: 'setting', options: ["jiraHost", "jiraEmail", "jiraAccessToken", "githubAccessToken"] }
+    {name: 'setting', options: ['jiraHost', 'jiraEmail', 'jiraAccessToken', 'githubAccessToken']}
   ]
 
   async run() {
-    const { args, flags } = this.parse(ConfigGet)
+    const {args} = this.parse(ConfigGet)
     const configFile = await this.getConfig()
     const setting = args.setting
     if (setting) {

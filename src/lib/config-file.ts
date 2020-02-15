@@ -1,19 +1,19 @@
 export class ConfigFile {
-  private readonly json: ConfigFileJSON
   readonly jiraHost: string
   readonly jiraEmail: string
   readonly jiraAccessToken: string
   readonly githubAccessToken: string
+  private readonly json: ConfigFileJSON
 
   constructor(json?: ConfigFileJSON) {
     if (json) {
       this.json = json
     } else {
       this.json = {
-        jiraHost: "",
-        jiraEmail: "",
-        jiraAccessToken: "",
-        githubAccessToken: ""
+        jiraHost: '',
+        jiraEmail: '',
+        jiraAccessToken: '',
+        githubAccessToken: ''
       }
     }
 
@@ -23,13 +23,13 @@ export class ConfigFile {
     this.githubAccessToken = this.json.githubAccessToken
   }
 
-  update(setting: "jiraHost" | "jiraEmail" | "jiraAccessToken" | "githubAccessToken", value: string): ConfigFile {
+  update(setting: 'jiraHost' | 'jiraEmail' | 'jiraAccessToken' | 'githubAccessToken', value: string): ConfigFile {
     const updatedJson = this.json
     updatedJson[setting] = value
     return new ConfigFile(updatedJson)
   }
 
-  get(setting: "jiraHost" | "jiraEmail" | "jiraAccessToken" | "githubAccessToken"): string {
+  get(setting: 'jiraHost' | 'jiraEmail' | 'jiraAccessToken' | 'githubAccessToken'): string {
     return this.json[setting]
   }
 
