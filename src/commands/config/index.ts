@@ -1,5 +1,5 @@
 import { flags } from '@oclif/command'
-import BaseCommand from "../../base2"
+import BaseCommand from "../../BaseCommand"
 import Help from "@oclif/plugin-help"
 
 export default class Config extends BaseCommand {

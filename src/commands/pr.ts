@@ -1,55 +1,78 @@
-import {Command, flags} from "@oclif/command"
+import { flags } from "@oclif/command"
 import cli from "cli-ux"
 import { Repository, Reference } from "nodegit"
 import { JiraClient } from "../jiraClient"
 import { GitHubClient } from "../githubClient"
 import * as inquirer from "inquirer"
-import BaseCommand from "../base"
+import BaseCommand from "../BaseCommand"
 
 export default class Pr extends BaseCommand {
     static description = "Create GitHub PRs from JIRA tickets"
     static flags = {
-        ...BaseCommand.flags,
         "help": flags.help({ char: "h" }),
-        "base-branch": flags.string({ char: "b", description: "base branch for PR" }),
-        "ticket-id": flags.string({ char: "t", description: "jira ticket ID" }),
-        "pr-title": flags.string({ description: "custom PR title" }),
-        "draft": flags.boolean({ description: "draft PR" }),
-        "description": flags.string({ description: "PR description" })
+        "interactive": flags.boolean({ char: "i", description: "interactive mode", default: false }),
+        "base-branch": flags.string({ char: "b", description: "base branch for pull request" }),
+        "ticket-id": flags.string({ char: "t", description: "Jira ticket ID" }),
+        "pr-title": flags.string({ description: "custom pull request title" }),
+        "draft": flags.boolean({ description: "make a draft pull request" }),
+        "description": flags.string({ description: "custom pull request description" })
     }
 
     async run() {
-        const {flags} = this.parse(Pr)
-        await this.parseBaseFlags(flags)
+        const { flags } = this.parse(Pr)
+        const config = await this.getConfig()
 
-        // JIRA
-        const jiraTicketId = await this.getFlagValue2(flags, "ticket-id", this.valuePrompter())
-        const jiraTicket = await this.getJiraTicket(this.jiraAccessToken, this.jiraHost, this.jiraUser, jiraTicketId)
+        // Jira
 
-        // GitHub
-        const baseBranch = await this.getFlagValue2(flags, "base-branch", this.listPrompter(this.branchChoiceProvider), "master")
-        const githubAccessToken = await this.getFlagValue2(flags, "github-access-token", this.valuePrompter())
-        const prTitle = await this.getFlagValue2(flags, "pr-title", this.valuePrompter(jiraTicket.fields.summary), jiraTicket.fields.summary)
-        const draft = await this.getFlagValue2(flags, "draft", this.confirmPrompter(false), false)
-
-        let description: string
         if (flags.interactive) {
-          // Ask if user wants to input a description
-          const answer = await inquirer.prompt([{ name: "writeDescription", message: "Would you like to enter a description?", type: "confirm", default: false}])
-          if ((<any>answer).writeDescription) {
-            description = await this.getFlagValue2(flags, "description", this.editorPrompter(), "")
-          } else {
-            description = ""
+          if (!flags["ticket-id"]) {
+            const validator = (value: string) => {
+              if (value) {
+                return true
+              }
+              return "Jira ticket ID must not be empty"
+            }
+            flags["ticket-id"] = await this.promptInput("Jira ticket ID", undefined, validator)
           }
-        } else {
-          description = await this.getFlagValue2(flags, "description", this.editorPrompter(), "")
         }
 
-        const prTitleWithTicketId = this.createPRTitle(prTitle, jiraTicket)
-        const prDescription = this.createPRDescription(jiraTicket, description)
+        const jiraTicketId = flags["ticket-id"] || this.error("Missing ticket ID!")
+        const jiraTicket = await this.getJiraTicket(config.jiraAccessToken, config.jiraHost, config.jiraEmail, jiraTicketId)
+        const jiraTicketURL = `https://${config.jiraHost}/browse/${jiraTicket.key}`
+
+        // Github
+
+        if (flags.interactive) {
+          if (!flags["base-branch"]) {
+            const result: any = await inquirer.prompt({
+              name: "baseBranch",
+              message: "Base branch",
+              type: "list",
+              choices: await this.getGitBranches()
+            })
+            flags["base-branch"] = result.baseBranch
+          }
+
+          if (!flags["pr-title"]) {
+            flags["pr-title"] = await this.promptInput("Custom pull request title", jiraTicket.fields.summary)
+          }
+
+          if (!flags.draft) {
+            flags.draft = await this.promptConfirm("Draft pull request?")
+          }
+
+          if (!flags.description) {
+            flags.description = await this.promptInput("Pull request description")
+          }
+        }
+
+        const baseBranch = flags["base-branch"] || this.error("Missing base branch!")
+        const prTitle = `[${jiraTicket.key}] ${flags["pr-title"] || jiraTicket.fields.summary}`
+        const prDescription = flags.description ? `${flags.description}\n${jiraTicketURL}` : jiraTicketURL
+        const draft = flags.draft
 
         try {
-          const pr = await this.makePullRequest(githubAccessToken, baseBranch, prTitleWithTicketId, prDescription, draft)
+          const pr = await this.makePullRequest(config.githubAccessToken, baseBranch, prTitle, prDescription, draft)
           this.log(pr.html_url)
         } catch (error) {
           console.error(error.message)
@@ -57,9 +80,31 @@ export default class Pr extends BaseCommand {
         }
     }
 
-    private async branchChoiceProvider(): Promise<{}[]> {
-        const repo = await Repository.open(".");
-        return (await repo.getReferences(Reference.TYPE.LISTALL))
+    private async promptInput(message: string, defaultValue?: string, validator?: (value:string) => string | boolean): Promise<string> {
+      const response: any = await inquirer.prompt({
+        name: "result",
+        message: message,
+        type: "input",
+        default: defaultValue,
+        validate: validator
+      })
+      return response.result
+    }
+
+    private async promptConfirm(message: string, defaultValue?: boolean): Promise<boolean> {
+      const response: any = await inquirer.prompt({
+        name: "result",
+        message: message,
+        type: "confirm",
+        default: defaultValue || false
+      })
+      return response.result
+    }
+
+    private async getGitBranches(): Promise<{}[]> {
+        const repo = await Repository.open(".")
+        const references = await repo.getReferences()
+        return references
           .filter((ref) => { return ref.isBranch(); })
           .map((ref) => { return {name: ref.shorthand()} });
     }
@@ -92,18 +137,5 @@ export default class Pr extends BaseCommand {
         cli.action.stop("done")
 
         return result
-      }
-
-      private createPRTitle(title: string, jiraTicket: any) {
-        return `[${jiraTicket.key}] ${title}`
-      }
-
-      private createPRDescription(jiraTicket: any, customDescription?: string) {
-          const jiraUrl = `https://${this.jiraHost}/browse/${jiraTicket.key}`
-          if (customDescription !== undefined && customDescription.length > 0) {
-            return `${customDescription}\n${jiraUrl}`
-          } else {
-              return jiraUrl
-          }
       }
 }

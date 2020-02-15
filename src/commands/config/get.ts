@@ -1,6 +1,5 @@
 import { flags } from '@oclif/command'
-import BaseCommand from "../../base2"
-import { config } from 'cli-ux'
+import BaseCommand from "../../BaseCommand"
 
 export default class ConfigGet extends BaseCommand {
   static description = 'view configuration settings'

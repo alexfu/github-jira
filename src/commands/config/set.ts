@@ -1,5 +1,5 @@
 import { flags } from "@oclif/command"
-import BaseCommand from "../../base2"
+import BaseCommand from "../../BaseCommand"
 
 export default class SetCommand extends BaseCommand {
   static description = 'set configuration settings'
