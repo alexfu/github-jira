@@ -47,12 +47,12 @@ export default class Pr extends BaseCommand {
         flags['pr-title'] = await this.promptInput({message: 'Custom pull request title', default: jiraTicket.fields.summary})
       }
 
-      if (!flags.draft) {
-        flags.draft = await this.promptConfirm({message: 'Draft pull request?'})
-      }
-
       if (!flags.description) {
         flags.description = await this.promptInput({message: 'Pull request description'})
+      }
+
+      if (!flags.draft) {
+        flags.draft = await this.promptConfirm({message: 'Draft pull request?'})
       }
     }
 
