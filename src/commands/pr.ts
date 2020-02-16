@@ -5,6 +5,7 @@ import {Repository} from 'nodegit'
 import BaseCommand from '../base-command'
 import {GitHubClient} from '../github-client'
 import {JiraClient} from '../jira-client'
+import {Validators} from '../lib/prompt-validators'
 
 export default class Pr extends BaseCommand {
   static description = 'Create GitHub PRs from JIRA tickets'
@@ -26,13 +27,7 @@ export default class Pr extends BaseCommand {
 
     if (flags.interactive) {
       if (!flags['ticket-id']) {
-        const validator = (value: string) => {
-          if (value) {
-            return true
-          }
-          return 'Jira ticket ID must not be empty'
-        }
-        flags['ticket-id'] = await this.promptInput({message: 'Jira ticket ID', validator})
+        flags['ticket-id'] = await this.promptInput({message: 'Jira ticket ID', validator: Validators.required})
       }
     }
 

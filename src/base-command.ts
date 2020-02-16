@@ -6,7 +6,7 @@ import * as path from 'path'
 import {ConfigFile} from './lib/config-file'
 
 export default abstract class BaseCommand extends Command {
-  private readonly configFilePath = path.join(this.config.configDir, 'config.json')
+  readonly configFilePath = path.join(this.config.configDir, 'config.json')
 
   async getConfig(): Promise<ConfigFile> {
     await fs.ensureDir(this.config.configDir)
