@@ -1,11 +1,11 @@
 import {flags} from '@oclif/command'
 import cli from 'cli-ux'
-import * as inquirer from 'inquirer'
 import {Repository} from 'nodegit'
 
 import BaseCommand from '../base-command'
 import {GitHubClient} from '../github-client'
 import {JiraClient} from '../jira-client'
+import {Validators} from '../lib/prompt-validators'
 
 export default class Pr extends BaseCommand {
   static description = 'Create GitHub PRs from JIRA tickets'
@@ -27,13 +27,7 @@ export default class Pr extends BaseCommand {
 
     if (flags.interactive) {
       if (!flags['ticket-id']) {
-        const validator = (value: string) => {
-          if (value) {
-            return true
-          }
-          return 'Jira ticket ID must not be empty'
-        }
-        flags['ticket-id'] = await this.promptInput({message: 'Jira ticket ID', validator})
+        flags['ticket-id'] = await this.promptInput({message: 'Jira ticket ID', validator: Validators.required})
       }
     }
 
@@ -41,17 +35,12 @@ export default class Pr extends BaseCommand {
     const jiraTicket = await this.getJiraTicket({accessToken: config.jiraAccessToken, host: config.jiraHost, username: config.jiraEmail, ticketId: jiraTicketId})
     const jiraTicketURL = `https://${config.jiraHost}/browse/${jiraTicket.key}`
 
-        // Github
+    // Github
 
     if (flags.interactive) {
       if (!flags['base-branch']) {
-        const result: any = await inquirer.prompt({
-          name: 'baseBranch',
-          message: 'Base branch',
-          type: 'list',
-          choices: await this.getGitBranches()
-        })
-        flags['base-branch'] = result.baseBranch
+        const choices = await this.getGitBranches()
+        flags['base-branch'] = await this.promptChoices({message: 'Base branch', choices})
       }
 
       if (!flags['pr-title']) {
@@ -81,33 +70,12 @@ export default class Pr extends BaseCommand {
     }
   }
 
-  private async promptInput(args: {message: string, default?: string, validator?(value: string): string | boolean}): Promise<string> {
-    const response: any = await inquirer.prompt({
-      name: 'result',
-      message: args.message,
-      type: 'input',
-      default: args.default,
-      validate: args.validator
-    })
-    return response.result
-  }
-
-  private async promptConfirm(args: {message: string, default?: boolean}): Promise<boolean> {
-    const response: any = await inquirer.prompt({
-      name: 'result',
-      message: args.message,
-      type: 'confirm',
-      default: args.default || false
-    })
-    return response.result
-  }
-
-  private async getGitBranches(): Promise<{}[]> {
+  private async getGitBranches(): Promise<string[]> {
     const repo = await Repository.open('.')
     const references = await repo.getReferences()
     return references
       .filter(ref => ref.isBranch())
-      .map(ref => ({name: ref.shorthand()}))
+      .map(ref => ref.shorthand())
   }
 
   private async getJiraTicket(args: {accessToken: string, host: string, username: string, ticketId: string}) {
