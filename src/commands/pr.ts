@@ -4,11 +4,11 @@ import {Repository} from 'nodegit'
 
 import BaseCommand from '../base-command'
 import {GitHubClient} from '../github-client'
-import {JiraClient} from '../jira-client'
+import {JiraClient, JiraIssue} from '../jira-client'
 import {Validators} from '../lib/prompt-validators'
 
 export default class Pr extends BaseCommand {
-  static description = 'Create GitHub PRs from JIRA tickets'
+  static description = 'create a pull requests from a Jira ticket'
   static flags = {
     help: flags.help({char: 'h'}),
     interactive: flags.boolean({char: 'i', description: 'interactive mode', default: false}),
@@ -78,7 +78,7 @@ export default class Pr extends BaseCommand {
       .map(ref => ref.shorthand())
   }
 
-  private async getJiraTicket(args: {accessToken: string, host: string, username: string, ticketId: string}) {
+  private async getJiraTicket(args: {accessToken: string, host: string, username: string, ticketId: string}): Promise<JiraIssue> {
     let jiraClient = new JiraClient({
       username: args.username,
       accessToken: args.accessToken,
