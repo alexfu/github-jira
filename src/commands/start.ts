@@ -52,11 +52,34 @@ export default class StartWorkCommand extends BaseCommand {
   }
 
   private async checkoutBranch(jiraTicket: JiraIssue) {
-    const branchName = `${jiraTicket.key.toLowerCase()}_${jiraTicket.fields.summary.toLowerCase().replace(/\s/g, '_')}`
+    const branchName = this.getBranchName(jiraTicket)
     const repo = await Repository.open('.')
     const commit = await repo.getHeadCommit()
     const branchRef = await repo.createBranch(branchName, commit)
     await repo.checkoutRef(branchRef)
     this.log(`Switched to new branch '${branchName}'`)
+  }
+
+  private getBranchName(jiraTicket: JiraIssue): string {
+    const issueType = jiraTicket.issuetype.name.toUpperCase()
+
+    let prefix: string
+    switch (issueType) {
+    case 'TASK':
+      prefix = 'chore/'
+      break
+    case 'IMPROVEMENT':
+      prefix = 'feature/'
+      break
+    case 'BUG':
+      prefix = 'bug/'
+      break
+    default:
+      prefix = ''
+    }
+
+    const ticketId = jiraTicket.key.toLowerCase()
+    const ticketSummary = jiraTicket.fields.summary.toLowerCase().replace(/\s/g, '_')
+    return `${prefix}${ticketId}_${ticketSummary}`
   }
 }
