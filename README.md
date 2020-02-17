@@ -7,12 +7,15 @@ USAGE
 COMMANDS
   config  view or change configuration settings
   help    display help for github-jira
-  pr      Create GitHub PRs from JIRA tickets
+  pr      create a pull request from a Jira ticket
+  start   start work on a Jira ticket
 ```
 
 # Features
 
-- Create GitHub PRs from JIRA tickets
+- Create Github pull request from a Jira ticket
+- Start work on a Jira ticket
+  - Transitions ticket to `In Progress` and creates a new git branch automatically (based off ticket issue type and name)
 
 # Install
 
