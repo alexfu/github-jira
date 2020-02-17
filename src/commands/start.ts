@@ -44,13 +44,13 @@ export default class StartWorkCommand extends BaseCommand {
     }
 
     cli.action.start('Transitioning Jira ticket')
-    let transitions = await this.jiraClient.getTransitions(ticketId)
+    let transitions = await this.jiraClient!.getTransitions(ticketId)
     transitions = transitions.filter((transition: { name: string }) => transition.name === 'Start Work')
     if (transitions.length === 0) {
       this.error('Unable to transition this ticket into In Progress!')
     }
     const transition = transitions[0]
-    await this.jiraClient.transitionTicket(ticketId, transition.id)
+    await this.jiraClient!.transitionTicket(ticketId, transition.id)
     cli.action.stop('done')
   }
 
