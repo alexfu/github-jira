@@ -85,7 +85,7 @@ export default class Pr extends BaseCommand {
       host: args.host
     })
 
-    cli.action.start('Fetching JIRA ticket')
+    cli.action.start('Fetching Jira ticket')
     const jiraTicket = await jiraClient.getJiraTicket(args.ticketId)
     cli.action.stop('done')
 

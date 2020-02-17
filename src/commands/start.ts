@@ -1,4 +1,5 @@
 import {flags} from '@oclif/command'
+import {cli} from 'cli-ux'
 import {Repository} from 'nodegit'
 
 import BaseCommand from '../base-command'
@@ -42,6 +43,7 @@ export default class StartWorkCommand extends BaseCommand {
       this.error('Jira client is null, unable to transition ticket!')
     }
 
+    cli.action.start('Transitioning Jira ticket')
     let transitions = await this.jiraClient.getTransitions(ticketId)
     transitions = transitions.filter((transition: { name: string }) => transition.name === 'Start Work')
     if (transitions.length === 0) {
@@ -49,14 +51,18 @@ export default class StartWorkCommand extends BaseCommand {
     }
     const transition = transitions[0]
     await this.jiraClient.transitionTicket(ticketId, transition.id)
+    cli.action.stop('done')
   }
 
   private async checkoutBranch(jiraTicket: JiraIssue) {
+    cli.action.start('Checking out new branch')
     const branchName = this.getBranchName(jiraTicket)
     const repo = await Repository.open('.')
     const commit = await repo.getHeadCommit()
     const branchRef = await repo.createBranch(branchName, commit)
     await repo.checkoutRef(branchRef)
+    cli.action.stop('done')
+
     this.log(`Switched to new branch '${branchName}'`)
   }
 
