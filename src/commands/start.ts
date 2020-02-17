@@ -5,7 +5,7 @@ import BaseCommand from '../base-command'
 import {JiraClient, JiraIssue} from '../jira-client'
 
 export default class StartWorkCommand extends BaseCommand {
-  static description = 'transition a Jira ticket to in progress'
+  static description = 'start work on a Jira ticket'
 
   static flags = {
     help: flags.help({char: 'h'})
