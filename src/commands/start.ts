@@ -12,7 +12,12 @@ export default class StartWorkCommand extends BaseCommand {
   }
 
   static args = [
-    {name: 'ticket', description: 'Jira ticket ID', required: true}
+    {name: 'ticket', description: 'Jira ticket ID (or key)', required: true}
+  ]
+
+  static examples = [
+    'start ntv-123',
+    'start 5678'
   ]
 
   private jiraClient?: JiraClient
