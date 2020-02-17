@@ -8,7 +8,7 @@ import {JiraClient, JiraIssue} from '../jira-client'
 import {Validators} from '../lib/prompt-validators'
 
 export default class Pr extends BaseCommand {
-  static description = 'create a pull requests from a Jira ticket'
+  static description = 'create a pull request from a Jira ticket'
   static flags = {
     help: flags.help({char: 'h'}),
     interactive: flags.boolean({char: 'i', description: 'interactive mode', default: false}),
