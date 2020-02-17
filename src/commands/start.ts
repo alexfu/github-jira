@@ -15,26 +15,35 @@ export default class StartWorkCommand extends BaseCommand {
     {name: 'ticket', description: 'Jira ticket ID', required: true}
   ]
 
+  private jiraClient?: JiraClient
+
   async run() {
     const {args} = this.parse(StartWorkCommand)
     const ticketId = args.ticket
 
     const config = await this.getConfig()
-    const jiraClient = new JiraClient({host: config.jiraHost, username: config.jiraEmail, accessToken: config.jiraAccessToken})
+    this.jiraClient = new JiraClient({host: config.jiraHost, username: config.jiraEmail, accessToken: config.jiraAccessToken})
 
-    let transitions = await jiraClient.getTransitions(ticketId)
+    // Transition ticket to In Progress
+    await this.transitionTicketToInProgress(ticketId)
+
+    // Check out new git branch
+    const jiraTicket = await this.jiraClient.getJiraTicket(ticketId)
+    await this.checkoutBranch(jiraTicket)
+  }
+
+  private async transitionTicketToInProgress(ticketId: string) {
+    if (!this.jiraClient) {
+      this.error('Jira client is null, unable to transition ticket!')
+    }
+
+    let transitions = await this.jiraClient.getTransitions(ticketId)
     transitions = transitions.filter((transition: { name: string }) => transition.name === 'Start Work')
     if (transitions.length === 0) {
       this.error('Unable to transition this ticket into In Progress!')
     }
-
-    // Transition ticket to In Progress
     const transition = transitions[0]
-    await jiraClient.transitionTicket(ticketId, transition.id)
-
-    // Check out new git branch
-    const jiraTicket = await jiraClient.getJiraTicket(ticketId)
-    await this.checkoutBranch(jiraTicket)
+    await this.jiraClient.transitionTicket(ticketId, transition.id)
   }
 
   private async checkoutBranch(jiraTicket: JiraIssue) {
