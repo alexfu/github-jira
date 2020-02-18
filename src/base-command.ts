@@ -25,6 +25,7 @@ export default abstract class BaseCommand extends Command {
   }
 
   async saveConfig(config: ConfigFile) {
+    await fs.ensureDir(this.config.configDir)
     await fs.writeFile(this.configFilePath, config.toString())
   }
 
