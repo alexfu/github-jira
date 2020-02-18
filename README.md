@@ -28,6 +28,18 @@ Download latest binary here: https://github.com/alexfu/github-jira/releases.
 $ npm i github-jira
 ```
 
+# Configure
+
+`github-jira` requires initial configuration before using. Run the following command to setup configuration:
+
+```
+$ github-jira config:init
+```
+
+# Usage
+
+Run `github-jira help` to see a list of all available commands. Each command also has their own help subcommand.
+
 # Integrate with Git
 Easily integrate with git by using this script:
 
