@@ -49,6 +49,5 @@ export class JiraClient {
 export interface JiraIssue {
   id: string,
   key: string,
-  fields: {summary: string}
-  issuetype: {name: string}
+  fields: {summary: string, issuetype: {name: string}}
 }

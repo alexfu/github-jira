@@ -67,7 +67,7 @@ export default class StartWorkCommand extends BaseCommand {
   }
 
   private getBranchName(jiraTicket: JiraIssue): string {
-    const issueType = jiraTicket.issuetype.name.toUpperCase()
+    const issueType = jiraTicket.fields.issuetype.name.toUpperCase()
 
     let prefix: string
     switch (issueType) {
@@ -85,7 +85,7 @@ export default class StartWorkCommand extends BaseCommand {
     }
 
     const ticketId = jiraTicket.key.toLowerCase()
-    const ticketSummary = jiraTicket.fields.summary.toLowerCase().replace(/\s/g, '_')
+    const ticketSummary = jiraTicket.fields.summary.toLowerCase().replace(/[\s:]/g, '_')
     return `${prefix}${ticketId}_${ticketSummary}`
   }
 }
