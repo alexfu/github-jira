@@ -78,14 +78,18 @@ export default class StartWorkCommand extends BaseCommand {
       prefix = 'feature/'
       break
     case 'BUG':
-      prefix = 'bug/'
+      prefix = 'bugfix/'
       break
     default:
       prefix = ''
     }
 
     const ticketId = jiraTicket.key.toLowerCase()
-    const ticketSummary = jiraTicket.fields.summary.toLowerCase().replace(/[\s:]/g, '_')
-    return `${prefix}${ticketId}_${ticketSummary}`
+    const ticketSummary = jiraTicket.fields.summary.toLowerCase()
+    return this.sanitizeBranchName(`${prefix}${ticketId}_${ticketSummary}`)
+  }
+
+  private sanitizeBranchName(name: string): string {
+    return name.replace(/'/g, '').replace(/:/g, ' ').replace(/\s/g, '_')
   }
 }
