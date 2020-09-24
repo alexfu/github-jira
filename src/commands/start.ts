@@ -55,8 +55,10 @@ export default class StartWorkCommand extends BaseCommand {
   }
 
   private async checkoutBranch(jiraTicket: JiraIssue) {
+    const defaultBranchName = this.getBranchName(jiraTicket)
+    const branchName = await this.promptInput({message: 'Branch name', default: defaultBranchName})
+
     cli.action.start('Checking out new branch')
-    const branchName = this.getBranchName(jiraTicket)
     const repo = await Repository.open('.')
     const commit = await repo.getHeadCommit()
     const branchRef = await repo.createBranch(branchName, commit)
