@@ -88,7 +88,8 @@ export default class StartWorkCommand extends BaseCommand {
 
     const ticketId = jiraTicket.key.toLowerCase()
     const ticketSummary = jiraTicket.fields.summary.toLowerCase()
-    return this.sanitizeBranchName(`${prefix}${ticketId}_${ticketSummary}`)
+    const branchName = this.sanitizeBranchName(`${ticketId}_${ticketSummary}`)
+    return `${prefix}${branchName}`
   }
 
   private sanitizeBranchName(name: string): string {
