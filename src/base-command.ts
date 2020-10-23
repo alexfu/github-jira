@@ -1,7 +1,7 @@
 import Command from '@oclif/command'
 import * as fs from 'fs-extra'
-import * as inquirer from 'inquirer'
 import * as path from 'path'
+import * as prompts from 'prompts'
 
 import {ConfigFile} from './lib/config-file'
 
@@ -30,32 +30,34 @@ export default abstract class BaseCommand extends Command {
   }
 
   async promptInput(args: {message: string, default?: string, validator?(value: string): string | boolean}): Promise<string> {
-    const response: any = await inquirer.prompt({
+    const response: any = await prompts({
+      type: 'text',
       name: 'result',
       message: args.message,
-      type: 'input',
-      default: args.default,
+      initial: args.default,
       validate: args.validator
     })
     return response.result
   }
 
   async promptConfirm(args: {message: string, default?: boolean}): Promise<boolean> {
-    const response: any = await inquirer.prompt({
+    const response: any = await prompts({
+      type: 'confirm',
       name: 'result',
       message: args.message,
-      type: 'confirm',
-      default: args.default || false
+      initial: args.default || false
     })
     return response.result
   }
 
   async promptChoices(args: {message: string, choices: string[]}): Promise<string> {
-    const response: any = await inquirer.prompt({
+    const response: any = await prompts({
+      type: 'select',
       name: 'result',
       message: args.message,
-      type: 'list',
-      choices: args.choices
+      choices: args.choices.map((choice) => {
+        return { title: choice, value: choice }
+      })
     })
     return response.result
   }
